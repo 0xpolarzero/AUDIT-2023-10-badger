@@ -110,10 +110,7 @@ contract CollSurplusPool is ICollSurplusPool, ReentrancyGuard, AuthNoOwner {
     // --- 'require' functions ---
 
     function _requireCallerIsBorrowerOperations() internal view {
-        require(
-            msg.sender == borrowerOperationsAddress,
-            "CollSurplusPool: Caller is not Borrower Operations"
-        );
+        require(msg.sender == borrowerOperationsAddress, "CollSurplusPool: Caller is not Borrower Operations");
     }
 
     function _requireCallerIsCdpManager() internal view {

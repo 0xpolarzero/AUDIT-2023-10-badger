@@ -110,10 +110,7 @@ contract CollSurplusPool is ICollSurplusPool, ReentrancyGuard, AuthNoOwner {
     // --- 'require' functions ---
 
     function _requireCallerIsBorrowerOperations() internal view {
-        require(
-            msg.sender == borrowerOperationsAddress,
-            "CollSurplusPool: Caller is not Borrower Operations"
-        );
+        require(msg.sender == borrowerOperationsAddress, "CollSurplusPool: Caller is not Borrower Operations");
     }
 
     function _requireCallerIsCdpManager() internal view {
@@ -145,11 +142,13 @@ contract CollSurplusPool is ICollSurplusPool, ReentrancyGuard, AuthNoOwner {
         uint256 balance = IERC20(token).balanceOf(address(this));
         require(amount <= balance, "CollSurplusPool: Attempt to sweep more than balance");
 
+        /// @audit But won't this revert if the token is not approved? Meaning it will silence it and
+        /// not consider the mutation?
         // MUTATION
         // IERC20(token).safeTransfer(feeRecipientAddress, amount);
         // changed to
         // IERC20(token).safeTransferFrom(msg.sender,feeRecipientAddress, amount);
-        IERC20(token).safeTransferFrom(msg.sender,feeRecipientAddress, amount);
+        IERC20(token).safeTransferFrom(msg.sender, feeRecipientAddress, amount);
 
         emit SweepTokenSuccess(token, amount, feeRecipientAddress);
     }
