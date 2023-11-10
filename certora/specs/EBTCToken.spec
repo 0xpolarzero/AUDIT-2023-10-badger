@@ -1,7 +1,5 @@
 import "./sanity.spec";
 
-/// @dev Here we don't check basic ERC20 methods/functionnalities, but rather focus on additional ones
-
 /// @dev Verify on original contract:
 /// certoraRun certora/confs/EBTCToken_verified.conf
 /// @dev Verify against mutations:
@@ -40,6 +38,7 @@ hook Sstore _balances[KEY address user] uint256 newBalance (uint256 oldBalance) 
     sumAllBalances = sumAllBalances + newBalance - oldBalance;
 }
 
+/// @dev The sum of all balances should be equal to the total supply
 invariant inv_totalBalancesEqualTotalSupply()
     sumAllBalances == to_mathint(totalSupply());
 
