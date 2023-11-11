@@ -42,18 +42,6 @@ methods {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                 INVARIANTS                                 */
-/* -------------------------------------------------------------------------- */
-
-ghost mathint sumSurplusCollShares {
-	  init_state axiom sumSurplusCollShares == 0; 
-}
-
-hook Sstore balances[KEY address user] uint256 newBalance (uint256 oldBalance) STORAGE {
-    sumSurplusCollShares = sumSurplusCollShares + newBalance - oldBalance;
-}
-
-/* -------------------------------------------------------------------------- */
 /*                                    RULES                                   */
 /* -------------------------------------------------------------------------- */
 
