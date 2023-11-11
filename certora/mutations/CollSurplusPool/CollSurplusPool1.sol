@@ -142,8 +142,6 @@ contract CollSurplusPool is ICollSurplusPool, ReentrancyGuard, AuthNoOwner {
         uint256 balance = IERC20(token).balanceOf(address(this));
         require(amount <= balance, "CollSurplusPool: Attempt to sweep more than balance");
 
-        /// @audit But won't this revert if the token is not approved? Meaning it will silence it and
-        /// not consider the mutation?
         // MUTATION
         // IERC20(token).safeTransfer(feeRecipientAddress, amount);
         // changed to
