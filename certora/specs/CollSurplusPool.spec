@@ -47,6 +47,26 @@ methods {
 
 use rule sanity;
 
+/// @dev Getter functions should never revert
+rule gettersNeverRevert(method f) {
+    address a;
+
+    env e;
+    require e.msg.value == 0;
+
+    if (f.selector == sig:getSurplusCollShares(address).selector) {
+      getSurplusCollShares@withrevert(e, a);
+    } else {
+      calldataarg args;
+      f@withrevert(e, args);
+    }
+
+    assert (
+        f.selector == sig:getTotalSurplusCollShares().selector ||
+        f.selector == sig:getSurplusCollShares(address).selector
+    ) => !lastReverted;
+}
+
 /// @dev Change to the collateral or surplus balances should only occur in such ways:
 /// 1. The balance of the contract decreased
 /// OR (the implications are identical)

@@ -48,6 +48,40 @@ invariant inv_totalBalancesEqualTotalSupply()
 
 use rule sanity;
 
+/// @dev Getter functions should never revert
+rule gettersNeverRevert(method f) {
+    address a;
+    address b;
+
+    env e;
+    require e.msg.value == 0;
+
+    if (f.selector == sig:balanceOf(address).selector) {
+      balanceOf@withrevert(e, a);
+    } else if (f.selector == sig:allowance(address,address).selector) {
+      allowance@withrevert(e, a, b);
+    } else if (f.selector == sig:nonces(address).selector) {
+      nonces@withrevert(e, a);
+    } else {
+      calldataarg args;
+      f@withrevert(e, args);
+    }
+
+    assert (
+        f.selector == sig:totalSupply().selector ||
+        f.selector == sig:balanceOf(address).selector ||
+        f.selector == sig:allowance(address,address).selector ||
+        f.selector == sig:DOMAIN_SEPARATOR().selector ||
+        f.selector == sig:domainSeparator().selector ||
+        f.selector == sig:nonces(address).selector ||
+        f.selector == sig:name().selector ||
+        f.selector == sig:symbol().selector ||
+        f.selector == sig:decimals().selector ||
+        f.selector == sig:version().selector ||
+        f.selector == sig:permitTypeHash().selector
+    ) => !lastReverted;
+}
+
 /// @dev Change in EBTC Token balances should only occur in the following cases (when calling):
 /// - mint
 /// - burn
