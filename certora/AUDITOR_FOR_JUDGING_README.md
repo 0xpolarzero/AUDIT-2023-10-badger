@@ -33,6 +33,7 @@ The following is a summary of the methodology used to find necessary checks to p
 ### Harness contracts
 
 - `harness/EBTCTokenHarness`: new harness contract to add helper functions
+- `harness/ActivePoolHarness`: new harness contract to add helper functions (updating invariant for instance)
 
 ### Notes
 
