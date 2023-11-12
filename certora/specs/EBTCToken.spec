@@ -113,30 +113,50 @@ rule changesToBalanceAndTotalSupply(method f) {
   uint256 allowanceAfter = allowance(account, account);
   uint256 totalSupplyAfter = totalSupply();
 
-  assert balanceAfter != balanceBefore =>
-    (
+  // Verify that if the balance increases
+  // > The function called is mint, transfer or transferFrom
+  assert balanceAfter > balanceBefore => (
       f.selector == sig:mint(address,uint256).selector ||
+      f.selector == sig:transfer(address,uint256).selector ||
+      f.selector == sig:transferFrom(address,address,uint256).selector
+  );
+  // Verify that if the balance decreases
+  // > The function called is burn, transfer or transferFrom
+  assert balanceAfter < balanceBefore => (
       f.selector == sig:burn(address,uint256).selector ||
       f.selector == sig:burn(uint256).selector ||
       f.selector == sig:transfer(address,uint256).selector ||
       f.selector == sig:transferFrom(address,address,uint256).selector
-    );
+  );
 
-  assert totalSupplyAfter != totalSupplyBefore =>
-    (
-      f.selector == sig:mint(address,uint256).selector ||
+  // Verify that if the total supply increases
+  // > The function called is mint
+  assert totalSupplyAfter > totalSupplyBefore => (
+      f.selector == sig:mint(address,uint256).selector
+  );
+  // Verify that if the total supply decreases
+  // > The function called is burn
+  assert totalSupplyAfter < totalSupplyBefore => (
       f.selector == sig:burn(address,uint256).selector ||
       f.selector == sig:burn(uint256).selector
-    );
+  );
 
-  assert allowanceAfter != allowanceBefore =>
-    (
+  // Verify that if the allowance increases
+  // > The function called is approve, increaseAllowance or permit
+  assert allowanceAfter > allowanceBefore => (
       f.selector == sig:approve(address,uint256).selector ||
       f.selector == sig:increaseAllowance(address,uint256).selector ||
+      f.selector == sig:permit(address,address,uint256,uint256,uint8,bytes32,bytes32).selector
+  );
+  // Verify that if the allowance decreases
+  // > The function called is approve, decreaseAllowance, transferFrom or permit
+  // TODO maybe permit as well?
+  assert allowanceAfter < allowanceBefore => (
+      f.selector == sig:approve(address,uint256).selector ||
       f.selector == sig:decreaseAllowance(address,uint256).selector ||
       f.selector == sig:transferFrom(address,address,uint256).selector ||
       f.selector == sig:permit(address,address,uint256,uint256,uint8,bytes32,bytes32).selector
-    );
+  );
 }
 
 /// @dev Minting of tokens should only occur in the following conditions:
