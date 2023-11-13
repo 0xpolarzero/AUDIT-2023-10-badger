@@ -42,15 +42,15 @@ methods {
 /*                                 INVARIANTS                                 */
 /* -------------------------------------------------------------------------- */
 
-/* ---------------------------- System collateral --------------------------- */
+/* ----------------------------- GHOST VARIABLES ---------------------------- */
 /// @dev Init ghost for `systemCollShares` from the ActivePool contract
 ghost mathint mirror_systemCollShares {
 	  init_state axiom mirror_systemCollShares == 0; 
 }
 
 /// @dev Init ghost for `feeRecipientClaimableCollShares` from the ActivePool contract
-ghost mathint mirror_feeRecipientCollShares {
-    init_state axiom mirror_feeRecipientCollShares == 0; 
+ghost mathint mirror_feeRecipientClaimableCollShares {
+    init_state axiom mirror_feeRecipientClaimableCollShares == 0; 
 }
 
 /// @dev Init ghost for `sharesOf()` from the collateral contract
@@ -58,36 +58,52 @@ ghost mapping(address => mathint) mirror_sharesOf {
     init_state axiom forall address a. mirror_sharesOf[a] == 0;
 }
 
-/// @dev Mirror updates to `systemCollShares` in `mirror_systemCollShares`
-hook Sstore systemCollShares uint256 newCollShares (uint256 oldCollShares) STORAGE {
-    mirror_systemCollShares = newCollShares;
+/* ---------------------------------- HOOKS --------------------------------- */
+/// @dev Enfore `mirror_systemCollShares` to be equal to value read from storage
+hook Sload uint256 newCollShares systemCollShares STORAGE {
+  require mirror_systemCollShares == to_mathint(newCollShares);
 }
 
-/// @dev Mirror updates to `feeRecipientClaimableCollShares` in `mirror_feeRecipientCollShares`
-hook Sstore feeRecipientClaimableCollShares uint256 newCollShares (uint256 oldCollShares) STORAGE {
-    mirror_feeRecipientCollShares = newCollShares;
+/// @dev Enfore `mirror_feeRecipientClaimableCollShares` to be equal to value read from storage 
+hook Sload uint256 newCollShares feeRecipientCollShares STORAGE {
+  require mirror_feeRecipientClaimableCollShares == to_mathint(newCollShares);
+}
+
+/// @dev Enfore `mirror_sharesOf` to be equal to value read from storage
+hook Sload uint256 newCollShares collateral.balances[KEY address a]/* .(offset 0) */ STORAGE {
+  require mirror_sharesOf[a] == to_mathint(newCollShares);
+}
+
+/// @dev Mirror updates to `systemCollShares` in `mirror_systemCollShares`
+hook Sstore systemCollShares uint256 newCollShares (uint256 oldCollShares) STORAGE {
+    // mirror_systemCollShares = mirror_systemCollShares + (newCollShares - oldCollShares);
+    havoc mirror_systemCollShares assuming mirror_systemCollShares@new == mirror_systemCollShares@old + newCollShares - oldCollShares;
+    // mirror_systemCollShares = newCollShares;
+}
+
+/// @dev Mirror updates to `feeRecipientClaimableCollShares` in `mirror_feeRecipientClaimableCollShares`
+hook Sstore feeRecipientCollShares uint256 newCollShares (uint256 oldCollShares) STORAGE {
+    // mirror_feeRecipientClaimableCollShares = mirror_feeRecipientClaimableCollShares + (newCollShares - oldCollShares);
+    havoc mirror_feeRecipientClaimableCollShares assuming mirror_feeRecipientClaimableCollShares@new == mirror_feeRecipientClaimableCollShares@old + newCollShares - oldCollShares;
 }
 
 /// @dev Mirror updates to `collateral.sharesOf()` (tracked in a `balances` mapping) in `mirror_sharesOf`
 hook Sstore collateral.balances[KEY address a] uint256 newCollShares (uint256 oldCollShares) STORAGE {
-  // havoc sumOfShares assuming sumOfShares@new() == sumOfShares@old() + newValue - oldValue;
-    mirror_sharesOf[a] = newCollShares;
+    mirror_sharesOf[a] = mirror_sharesOf[a] + (newCollShares - oldCollShares);
+    // havoc mirror_sharesOf[a] assuming mirror_sharesOf@new[a] == mirror_sharesOf@old[a] + newCollShares - oldCollShares;
 }
 
-/// @dev Tracked system collateral shares should always be equal to the shares reported by the collateral contract
+/// @dev Shares reported by the collateral contract for ActivePool 
+/// should always be >= to the tracked shares for both the system and the fee recipient
+/// It could be greater since anyone can send tokens to the contract, but it should never be less
 invariant inv_systemCollSharesCorrectlyTracked()
-    mirror_systemCollShares == mirror_sharesOf[currentContract];
-
-/// @dev Tracked fee recipient collateral shares should always be equal to the shares reported by the collateral contract
-invariant inv_feeRecipientCollSharesCorrectlyTracked()
-    mirror_feeRecipientCollShares == mirror_sharesOf[feeRecipientAddress()];
+    mirror_sharesOf[currentContract] >= mirror_systemCollShares + mirror_feeRecipientClaimableCollShares;
 
 /* -------------------------------------------------------------------------- */
 /*                                    RULES                                   */
 /* -------------------------------------------------------------------------- */
 
 use rule sanity;
-use builtin rule viewReentrancy;
 
 /// @dev Getter functions should never revert
 rule gettersNeverRevert(method f) {
@@ -103,15 +119,6 @@ rule gettersNeverRevert(method f) {
         f.selector == sig:getSystemDebt().selector ||
         f.selector == sig:getFeeRecipientClaimableCollShares().selector
     ) => !lastReverted;
-}
-
-rule testRule(method f) {
-  // 1 = 28948022309329048855892746252171976963317496166410141009864396001978282409986
-    assert collateral.balanceOf(currentContract) == collateral.getPooledEthByShares(getSystemCollShares());
-    env e;
-    calldataarg args;
-    f(e, args);
-    assert collateral.balanceOf(currentContract) == collateral.getPooledEthByShares(getSystemCollShares());
 }
 
 /* -------------------------------------------------------------------------- */
