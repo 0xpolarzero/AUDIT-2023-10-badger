@@ -194,7 +194,6 @@ rule changeToBalancesSpecialCases(method f) {
 /// 3. The token being swept is NOT the collateral token
 /// 4. The amount being swept is less than or equal to the current balance of the contract
 /// => The amount of the token should be transferred from the contract to the feeRecipient
-/// @dev Any "sweeping" of tokens from the contract should only occur in the following conditions:
 rule sweepOfArbitraryToken(method f) {
     address user;
     address token;
@@ -230,7 +229,7 @@ rule sweepOfArbitraryToken(method f) {
     assert (afterContract < beforeContract || afterRecipient > beforeRecipient) => (
         f.selector == sig:sweepToken(address,uint256).selector && 
         call_isAuthorized(e.msg.sender, helper_uint32ToBytes4(sig:sweepToken(address,uint256).selector)) && 
-        to_mathint(amount) <= to_mathint(beforeContract) &&
+        amount <= beforeContract &&
         // actual transfer of tokens
         to_mathint(afterContract) == beforeContract - amount &&
         to_mathint(afterRecipient) == beforeRecipient + amount &&
