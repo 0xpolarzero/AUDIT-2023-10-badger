@@ -17,11 +17,14 @@ The following is a summary of the methodology used to find necessary checks to p
 ### Harness contracts
 
 - `harness/CollSurplusPoolHarness.sol`: added helper functions
+- `harness/CollateralTokenTester.sol`: formatted
 
 ### Specs
 
-- `specs/CollSurplusPool.spec`: added new specs
 - `specs/ActivePool.spec`: added new specs
+- `specs/SortedCdps.spec`: added new specs
+- `specs/CollSurplusPool.spec`: added new specs
+- `specs/EBTCToken.spec`: added new specs
 
 ### Confs
 
@@ -33,7 +36,7 @@ The following is a summary of the methodology used to find necessary checks to p
 ### Harness contracts
 
 - `harness/EBTCTokenHarness`: new harness contract to add helper functions
-- `harness/ActivePoolHarness`: new harness contract to add helper functions (updating invariant for instance)
+- `harness/ActivePoolHarness`: new harness contract to add helper functions
 
 ### Notes
 
