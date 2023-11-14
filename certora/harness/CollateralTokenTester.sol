@@ -41,7 +41,7 @@ contract CollateralTokenTester is ICollateralToken, Ownable {
         emit Withdrawal(msg.sender, wad, _share);
     }
 
-    function totalSupply() public view override returns (uint) { 
+    function totalSupply() public view override returns (uint256) {
         return getPooledEthByShares(_totalBalance);
     }
 
@@ -84,10 +84,11 @@ contract CollateralTokenTester is ICollateralToken, Ownable {
         return _sharesAmount * 3 / 2;
     }
 
-    function transferShares(
-        address _recipient,
-        uint256 _sharesAmount
-    ) public override returns (uint256) {
+    function transferShares(address _recipient, uint256 _sharesAmount) public override returns (uint256) {
+        // @audit _sharesAmount = 1 => _tknAmt = 1
+        // _sharesAmount = 2 => _tknAmt = 3
+        // Doesn't seem to matter much tho as the actual state change is not rounded
+        // Might be an issue if a function uses the return value as it could overestimate the shares transferred
         uint256 _tknAmt = getPooledEthByShares(_sharesAmount);
 
         // NOTE: Changed here to transfer underlying shares without rounding
@@ -107,18 +108,12 @@ contract CollateralTokenTester is ICollateralToken, Ownable {
         return address(this);
     }
 
-    function decreaseAllowance(
-        address spender,
-        uint256 subtractedValue
-    ) external override returns (bool) {
+    function decreaseAllowance(address spender, uint256 subtractedValue) external override returns (bool) {
         approve(spender, allowance[msg.sender][spender] - subtractedValue);
         return true;
     }
 
-    function increaseAllowance(
-        address spender,
-        uint256 addedValue
-    ) external override returns (bool) {
+    function increaseAllowance(address spender, uint256 addedValue) external override returns (bool) {
         approve(spender, allowance[msg.sender][spender] + addedValue);
         return true;
     }
