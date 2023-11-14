@@ -134,3 +134,4 @@ ngrok.config.yml
 
 # certora
 .certora*
+collect.json
