@@ -1,3 +1,7 @@
+# Notes
+
+You will find some notes about my submission in the file [AUDITOR_FOR_JUDGING_README.md](./AUDITOR_FOR_JUDGING_README.md), to provide a little bit of context and methodology.
+
 # Formal Verification Details
 
 ## Overview
